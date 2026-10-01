@@ -2,12 +2,12 @@ package org.example.command;
 
 
 import org.example.dto.input.JsonRequest;
-import org.example.server.Operation;
+import org.example.server.Command;
 
 public class CommandFactory {
-    public Command createCommand(JsonRequest request){
-        Operation operation = Operation.fromValue(request.getType());
-        switch (operation) {
+    public org.example.command.Command createCommand(JsonRequest request){
+        Command command = Command.fromValue(request.getType());
+        switch (command) {
             case GET -> {
                 return new ReadCommand();
             }

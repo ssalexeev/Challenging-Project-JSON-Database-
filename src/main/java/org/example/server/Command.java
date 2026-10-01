@@ -16,7 +16,7 @@ public enum Command {
         for(Command command : values()){
             if (command.value.equals(value)) return command;
         }
-        throw new IllegalArgumentException("Unknown Action: " + value);
+        return EXIT;
     }
 }
 
