@@ -41,7 +41,8 @@ public class JsonDatabase {
         try {
             String jsonContent = Files.readString(filePath);
             if (!jsonContent.isBlank()) {
-                Type mapType = new TypeToken<HashMap<String, JsonElement>>() {}.getType();
+                Type mapType = new TypeToken<HashMap<String, JsonElement>>() {
+                }.getType();
                 Map<String, JsonElement> loadedData = gson.fromJson(jsonContent, mapType);
                 return loadedData != null ? loadedData : new HashMap<>();
             }

@@ -5,7 +5,7 @@ import org.example.dto.input.JsonRequest;
 import org.example.server.Command;
 
 public class CommandFactory {
-    public org.example.command.Command createCommand(JsonRequest request){
+    public org.example.command.Command createCommand(JsonRequest request) {
         Command command = Command.fromValue(request.getType());
         switch (command) {
             case GET -> {

@@ -18,8 +18,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    private final String ADDRESS = "127.0.0.1";
-    private final int PORT = 23456;
+    private static final String ADDRESS = "127.0.0.1";
+    private static final int PORT = 23456;
 
     private final JsonDatabase database = new JsonDatabase();
     private final CommandFactory commandFactory = new CommandFactory();
