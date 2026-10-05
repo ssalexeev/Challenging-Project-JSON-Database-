@@ -126,5 +126,51 @@ class ServerTest {
             sendRequest("{\"type\":\"exit\"}");
         }
     }
+    @Test
+    @DisplayName("Command execution exception branch (catch Exception e block)")
+    void testCommandExecutionCatchExceptionBranch() throws Exception {
+        Server server = new Server();
+        serverThreadExecutor.submit(server::start);
+        Thread.sleep(200);
+
+        try {
+            String requestJson = "{\"type\":\"get\",\"key\":\"non_existent_key_9999\"}";
+            String responseJson = sendRequest(requestJson);
+
+            assertNotNull(responseJson);
+            assertTrue(responseJson.contains("ERROR") || responseJson.contains("error"));
+            assertTrue(responseJson.contains("reason") || responseJson.contains("No such key"));
+        } finally {
+            sendRequest("{\"type\":\"exit\"}");
+        }
+    }
+
+    @Test
+    @DisplayName("Error accepting connection branch when server is not closed")
+    void testErrorAcceptingConnectionBranch() {
+        // Capture System.err output to verify the error log
+        ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+        PrintStream originalErr = System.err;
+        System.setErr(new PrintStream(errContent));
+
+        try (MockedConstruction<ServerSocket> mocked = Mockito.mockConstruction(
+                ServerSocket.class,
+                (mock, context) -> {
+                    // 1st call (while condition): false
+                    // 2nd call (if server.isClosed()): false -> prints error message
+                    // 3rd call (while condition): true -> breaks loop
+                    when(mock.isClosed()).thenReturn(false, false, true);
+                    when(mock.accept()).thenThrow(new IOException("Simulated accept error"));
+                })) {
+
+            Server server = new Server();
+            assertDoesNotThrow(server::start);
+
+            String errOutput = errContent.toString();
+            assertTrue(errOutput.contains("Error accepting connection: Simulated accept error"));
+        } finally {
+            System.setErr(originalErr);
+        }
+    }
 
 }
