@@ -21,7 +21,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JsonDatabaseTest {
 
@@ -339,8 +342,6 @@ class JsonDatabaseTest {
                 setupPath.add("age");
                 db.set(setupPath, new JsonPrimitive(30));
 
-                // Path of length >= 3 to enter loop (i = 1)
-                // Trying to delete: ["person", "age", "value"]
                 JsonArray invalidPath = new JsonArray();
                 invalidPath.add("person");
                 invalidPath.add("age"); // i = 1: !current.get("age").isJsonObject() triggers exception
@@ -406,7 +407,6 @@ class JsonDatabaseTest {
         @Test
         @DisplayName("saveToFile() catches IOException when writing fails")
         void saveToFileCatchesIOException(@TempDir Path tempDir) throws IOException {
-            // Create a directory at the expected file location
             Path dirAsFilePath = tempDir.resolve("invalid_file.json");
             Files.createDirectory(dirAsFilePath);
 
@@ -417,12 +417,9 @@ class JsonDatabaseTest {
             try {
                 JsonDatabase dbWithInvalidFile = new JsonDatabase(dirAsFilePath);
 
-                // set() calls saveToFile() -> Files.writeString() on a directory throws IOException
                 assertDoesNotThrow(() ->
                         dbWithInvalidFile.set(new JsonPrimitive("key"), new JsonPrimitive("val"))
                 );
-
-                // Verify catch block executed and printed the expected message
                 assertTrue(errContent.toString().contains("Error saving database file:"));
             } finally {
                 System.setErr(originalErr);

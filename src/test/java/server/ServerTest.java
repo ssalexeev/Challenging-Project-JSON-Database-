@@ -1,32 +1,36 @@
 package server;
 
-import com.google.gson.Gson;
 import org.example.server.Server;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.mockito.MockedConstruction;
+import org.mockito.Mockito;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 @Timeout(value = 5, unit = TimeUnit.SECONDS)
 class ServerTest {
 
     private static final String SERVER_HOST = "127.0.0.1";
     private static final int SERVER_PORT = 23456;
-
-    private final Gson gson = new Gson();
     private ExecutorService serverThreadExecutor;
 
     @BeforeEach
@@ -65,11 +69,30 @@ class ServerTest {
         String responseJson = sendRequest("{\"type\":\"exit\"}");
 
         assertNotNull(responseJson);
-        assertTrue(responseJson.contains("OK") || responseJson.contains("200") || !responseJson.isEmpty());
+        assertFalse(responseJson.isEmpty());
 
         serverThreadExecutor.shutdown();
         assertTrue(serverThreadExecutor.awaitTermination(2, TimeUnit.SECONDS),
                 "Server thread should terminate after exit command");
+    }
+
+    @Test
+    @DisplayName("Command execution success branch (try block)")
+    void testCommandExecutionSuccessBranch() throws Exception {
+        Server server = new Server();
+        serverThreadExecutor.submit(server::start);
+        Thread.sleep(200);
+
+        try {
+            // Send a valid set request to execute command successfully
+            String requestJson = "{\"type\":\"set\",\"key\":\"testKey\",\"value\":\"testValue\"}";
+            String responseJson = sendRequest(requestJson);
+
+            assertNotNull(responseJson);
+            assertTrue(responseJson.contains("OK"), "Response should indicate successful command execution");
+        } finally {
+            sendRequest("{\"type\":\"exit\"}");
+        }
     }
 
     @Test
@@ -116,7 +139,6 @@ class ServerTest {
         try {
             // Connect and close immediately without writing UTF string to force EOFException/IOException
             try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT)) {
-                socket.close();
             }
 
             // Give server time to catch and process the stream exception

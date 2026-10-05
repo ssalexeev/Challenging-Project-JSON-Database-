@@ -5,7 +5,7 @@ import com.beust.jcommander.Parameter;
 public class Args {
 
     @Parameter(names = "-in",
-            description = "Data file name"
+            description = "command file name"
     )
     private String fileName;
 
