@@ -326,4 +326,58 @@ class JsonDatabaseTest {
             }
         }
     }
+
+    @Nested
+    @DisplayName("File I/O Exception Tests")
+    class FileIOExceptionTests {
+
+        @Test
+        @DisplayName("loadFromFile() catches IOException when reading fails and falls back to empty map")
+        void loadFromFileCatchesIOException(@TempDir Path tempDir) {
+            // Redirect System.err to verify error log message
+            ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+            PrintStream originalErr = System.err;
+            System.setErr(new PrintStream(errContent));
+
+            try {
+                // Passing a directory path (tempDir) makes Files.readString() throw IOException
+                JsonDatabase dbWithInvalidFile = new JsonDatabase(tempDir);
+
+                // Verify catch block executed and printed the expected message
+                assertTrue(errContent.toString().contains("Error reading database file:"));
+
+                // Verify database safely initialized to an empty HashMap
+                assertThrows(IllegalArgumentException.class,
+                        () -> dbWithInvalidFile.get(new JsonPrimitive("missingKey")));
+            } finally {
+                System.setErr(originalErr);
+            }
+        }
+
+        @Test
+        @DisplayName("saveToFile() catches IOException when writing fails")
+        void saveToFileCatchesIOException(@TempDir Path tempDir) throws IOException {
+            // Create a directory at the expected file location
+            Path dirAsFilePath = tempDir.resolve("invalid_file.json");
+            Files.createDirectory(dirAsFilePath);
+
+            ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+            PrintStream originalErr = System.err;
+            System.setErr(new PrintStream(errContent));
+
+            try {
+                JsonDatabase dbWithInvalidFile = new JsonDatabase(dirAsFilePath);
+
+                // set() calls saveToFile() -> Files.writeString() on a directory throws IOException
+                assertDoesNotThrow(() ->
+                        dbWithInvalidFile.set(new JsonPrimitive("key"), new JsonPrimitive("val"))
+                );
+
+                // Verify catch block executed and printed the expected message
+                assertTrue(errContent.toString().contains("Error saving database file:"));
+            } finally {
+                System.setErr(originalErr);
+            }
+        }
+    }
 }
