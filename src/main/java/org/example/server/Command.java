@@ -12,9 +12,11 @@ public enum Command {
         this.value = value;
     }
 
-    public static Command fromValue(String value){
-        for(Command command : values()){
-            if (command.value.equals(value)) return command;
+    public static Command fromValue(String value) {
+        for (Command command : values()) {
+            if (command.value.equals(value)) {
+                return command;
+            }
         }
         return EXIT;
     }

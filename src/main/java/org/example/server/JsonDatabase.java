@@ -25,14 +25,14 @@ public class JsonDatabase {
     private final ReentrantReadWriteLock.ReadLock read = rwl.readLock();
     private final ReentrantReadWriteLock.WriteLock write = rwl.writeLock();
 
-    private final Path filePath = Path.of(System.getProperty("user.dir") + "/src/server/data/db.json");
+    private final Path filePath;
 
-    public JsonDatabase() {
+    public JsonDatabase(Path filePath) {
         this.gson = new GsonBuilder().setPrettyPrinting().create();
-
+        this.filePath = filePath;
         this.database = loadFromFile();
-
     }
+
 
     private Map<String, JsonElement> loadFromFile() {
         if (!Files.exists(filePath)) {
@@ -41,7 +41,8 @@ public class JsonDatabase {
         try {
             String jsonContent = Files.readString(filePath);
             if (!jsonContent.isBlank()) {
-                Type mapType = new TypeToken<HashMap<String, JsonElement>>() {}.getType();
+                Type mapType = new TypeToken<HashMap<String, JsonElement>>() {
+                }.getType();
                 Map<String, JsonElement> loadedData = gson.fromJson(jsonContent, mapType);
                 return loadedData != null ? loadedData : new HashMap<>();
             }

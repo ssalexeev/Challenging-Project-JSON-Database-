@@ -16,8 +16,8 @@ import java.nio.file.Paths;
 
 
 public class Client {
-    private final String ADDRESS = "127.0.0.1";
-    private final int PORT = 23456;
+    private static final String ADDRESS = "127.0.0.1";
+    private static final int PORT = 23456;
 
     private final Gson gson = new GsonBuilder().create();
     private final Args arguments = new Args();

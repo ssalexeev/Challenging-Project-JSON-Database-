@@ -19,6 +19,18 @@ public class JsonResponse {
         return r;
     }
 
+    public String getResponse() {
+        return response;
+    }
+
+    public JsonElement getValue() {
+        return value;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
     public void setValue(JsonElement value) {
         this.value = value;
     }

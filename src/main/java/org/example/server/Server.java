@@ -14,20 +14,25 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    private final String ADDRESS = "127.0.0.1";
-    private final int PORT = 23456;
+    private static final String ADDRESS = "127.0.0.1";
+    private static final int PORT = 23456;
 
-    private final JsonDatabase database = new JsonDatabase();
+    private final JsonDatabase database;
     private final CommandFactory commandFactory = new CommandFactory();
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
     private final ExecutorService executor = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors()
     );
+
+    public Server() {
+        this.database = new JsonDatabase(Path.of(System.getProperty("user.dir") + "/src/main/java/server/data/db.json"));
+    }
 
     public void start() {
         System.out.println("Server started!");
@@ -78,7 +83,7 @@ public class Server {
                 Command command = commandFactory.createCommand(clientRequest);
                 response = command.execute(clientRequest, database);
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 response = JsonResponse.error();
                 response.setReason(e.getMessage());
             }
