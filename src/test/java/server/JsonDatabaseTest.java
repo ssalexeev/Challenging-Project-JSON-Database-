@@ -303,6 +303,51 @@ class JsonDatabaseTest {
                 assertEquals("No such key", ex.getMessage());
             }
 
+            @Test
+            @DisplayName("delete() throws exception when intermediate subkey is missing (!current.has(subKey))")
+            void deleteThrowsWhenIntermediateSubkeyIsMissing() {
+                // Setup state: { "person": { "details": "someValue" } }
+                JsonArray setupPath = new JsonArray();
+                setupPath.add("person");
+                setupPath.add("details");
+                db.set(setupPath, new JsonPrimitive("someValue"));
+
+                // Path of length >= 3 to enter loop (i = 1)
+                // Trying to delete: ["person", "NON_EXISTENT_MIDDLE", "targetKey"]
+                JsonArray invalidPath = new JsonArray();
+                invalidPath.add("person");
+                invalidPath.add("NON_EXISTENT_MIDDLE"); // i = 1: !current.has("NON_EXISTENT_MIDDLE") triggers exception
+                invalidPath.add("targetKey");
+
+                IllegalArgumentException ex = assertThrows(
+                        IllegalArgumentException.class,
+                        () -> db.delete(invalidPath)
+                );
+                assertEquals("No such key", ex.getMessage());
+            }
+
+            @Test
+            @DisplayName("delete() throws exception when intermediate subkey is not a JsonObject (!current.get(subKey).isJsonObject())")
+            void deleteThrowsWhenIntermediateSubkeyIsNotObject() {
+                // Setup state: { "person": { "age": 30 } }  <-- 'age' is a primitive integer, NOT a JsonObject
+                JsonArray setupPath = new JsonArray();
+                setupPath.add("person");
+                setupPath.add("age");
+                db.set(setupPath, new JsonPrimitive(30));
+
+                // Path of length >= 3 to enter loop (i = 1)
+                // Trying to delete: ["person", "age", "value"]
+                JsonArray invalidPath = new JsonArray();
+                invalidPath.add("person");
+                invalidPath.add("age"); // i = 1: !current.get("age").isJsonObject() triggers exception
+                invalidPath.add("value");
+
+                IllegalArgumentException ex = assertThrows(
+                        IllegalArgumentException.class,
+                        () -> db.delete(invalidPath)
+                );
+                assertEquals("No such key", ex.getMessage());
+            }
 
             @Test
             @DisplayName("Throw exception when deleting last key in path if it does not exist")
